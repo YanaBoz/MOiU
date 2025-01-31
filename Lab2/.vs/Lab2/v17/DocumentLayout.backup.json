@@ -1,0 +1,62 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "V:\\BSUIR\\3k2s\\MOiU\\Lab2\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{9198D1EF-7E10-4500-A87A-D2FC44CF0DDD}|Lab2\\Lab2.pyproj|V:\\BSUIR\\3k2s\\MOiU\\Lab2\\Lab2\\Lab2.py||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{9198D1EF-7E10-4500-A87A-D2FC44CF0DDD}|Lab2\\Lab2.pyproj|solutionrelative:Lab2\\Lab2.py||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9198D1EF-7E10-4500-A87A-D2FC44CF0DDD}|Lab2\\Lab2.pyproj|V:\\BSUIR\\3k2s\\MOiU\\Lab2\\Lab2\\ext.txt||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{9198D1EF-7E10-4500-A87A-D2FC44CF0DDD}|Lab2\\Lab2.pyproj|solutionrelative:Lab2\\ext.txt||{8B382828-6202-11D1-8870-0000F87579D2}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 3,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:210250908:0:{83107a3e-496a-485e-b455-16ddb978e55e}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:1:0:{e8b06f52-6d01-11d2-aa7d-00c04f990343}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "ext.txt",
+              "DocumentMoniker": "V:\\BSUIR\\3k2s\\MOiU\\Lab2\\Lab2\\ext.txt",
+              "RelativeDocumentMoniker": "Lab2\\ext.txt",
+              "ToolTip": "V:\\BSUIR\\3k2s\\MOiU\\Lab2\\Lab2\\ext.txt",
+              "RelativeToolTip": "Lab2\\ext.txt",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003109|",
+              "WhenOpened": "2025-01-31T11:22:12.514Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Lab2.py",
+              "DocumentMoniker": "V:\\BSUIR\\3k2s\\MOiU\\Lab2\\Lab2\\Lab2.py",
+              "RelativeDocumentMoniker": "Lab2\\Lab2.py",
+              "ToolTip": "V:\\BSUIR\\3k2s\\MOiU\\Lab2\\Lab2\\Lab2.py*",
+              "RelativeToolTip": "Lab2\\Lab2.py*",
+              "ViewState": "AgIAAJsAAAAAAAAAAAAAAL8AAAAcAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.002457|",
+              "WhenOpened": "2025-01-30T21:27:46.242Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

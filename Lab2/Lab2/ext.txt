@@ -1,0 +1,712 @@
+﻿import numpy as np
+import re
+from itertools import combinations
+
+def generate_valid_bases(A):
+    m, n = A.shape
+    valid_bases = []
+    
+    for cols in combinations(range(n), m): 
+        B = A[:, cols]  
+        if np.linalg.det(B) != 0:  # Check that the determinant of B is non-zero
+            valid_bases.append(cols)
+
+    return valid_bases
+
+
+def extract_coefficients(equations):
+    num_equations = len(equations)
+    variables = set()
+    pattern = r"([+-]?\d*\.?\d+|[+-])?([a-zA-Z]\d*)"
+    
+    for equation in equations:
+        terms = re.findall(pattern, equation)
+        for coeff, var in terms:
+            if var:
+                variables.add(var)
+    
+    variables = sorted(list(variables))
+    num_variables = len(variables)
+    
+    A = np.zeros((num_equations, num_variables))
+    b = np.zeros(num_equations)
+    
+    for i, equation in enumerate(equations):
+        terms = re.findall(pattern, equation)
+        for coeff_str, var in terms:
+            if var:
+                coeff = -1.0 if coeff_str == "-" else (1.0 if coeff_str in ["", "+"] else float(coeff_str))
+                var_index = variables.index(var)
+                A[i, var_index] = coeff
+        
+        constant_term_match = re.search(r"=(.*)", equation)
+        if constant_term_match:
+            b[i] = float(constant_term_match.group(1))
+        else:
+            return None
+    
+    return A, b, variables
+
+
+def linear_programming_canonical(equations, objective_function):
+    A, b, variables = extract_coefficients(equations)
+    
+    obj_pattern = r"([+-]?\d*\.?\d*)*([a-zA-Z]\d*)"
+    obj_terms = re.findall(obj_pattern, objective_function)
+    
+    c = np.zeros(len(variables))
+    for coeff_str, var in obj_terms:
+        if var:
+            coeff = -1.0 if coeff_str == "-" else (1.0 if coeff_str in ["", "+"] else float(coeff_str))
+            var_index = variables.index(var)
+            c[var_index] = coeff
+    
+    basis = [i for i, col in enumerate(A.T) if sum(col) == 1 and set(col) <= {0, 1}]
+    x_b = b.copy()
+    x = np.zeros(len(variables))
+    for i, var in enumerate(basis):
+        if 0 <= var < len(x):  # Ensure index is within range
+           x[var] = x_b[i]
+    
+    return c, variables, A, b, x, basis
+
+
+def modify_matrix(A, A_modified):
+    n = A.shape[0]
+    
+    # Ensure that A and A_modified are of the same shape
+    if A.shape != A_modified.shape:
+        return "ERROR: Matrices A and A_modified must have the same dimensions."
+    
+    # Find the column index i where A and A_modified differ
+    i = -1
+    for col in range(n):
+        if not np.allclose(A[:, col], A_modified[:, col]):  # Check for column difference
+            i = col + 1  # 1-based index
+            break
+    
+    if i == -1:
+        return "ERROR: No column differs between A and A_modified."
+    
+    # Now, extract the vector x as the difference of the i-th columns
+    x = A_modified[:, i-1] - A[:, i-1]
+    x = x.reshape(-1, 1)  # Ensure x is a column vector
+
+    # Compute A1 (the inverse of A)
+    A1 = np.linalg.inv(A)
+    
+    # Compute l = A1 * x
+    l = np.dot(A1, x)
+    
+    # Check if the condition holds for l[i-1]
+    if l[i-1, 0] != 0:
+        y = -1
+        l1 = l.copy()
+        l1[i-1:] = y
+        
+        # Compute l2 based on l[i-1]
+        l2 = -1 / l[i-1] * l1
+        
+        # Create an identity matrix Q
+        Q = np.eye(n)
+        
+        # Modify Q at the i-th column with l2
+        Q_modified = Q.copy()
+        Q_modified[:, i-1] = l2.flatten()
+        
+        # Compute A_modified1 = Q_modified * A1
+        A_modified1 = np.dot(Q_modified, A1)
+        print("\nA_modified1:")
+        print(A_modified1)
+        return A_modified1
+    else:
+        return np.linalg.inv(A_modified)
+
+
+# Пример задания для линейного программирования:
+objective_function = "x1 + x2"
+equations = [
+    "-x1 + x2 + x3 = 1",
+    "x1 + x4 = 3",
+    "x2 + x5 = 2"
+]
+count = 1
+
+# Получаем каноническую форму задачи линейного программирования
+c, variables, A, b, x, basis = linear_programming_canonical(equations, objective_function)
+
+# Генерируем все допустимые базы
+valid_bases = generate_valid_bases(A)
+print("Valid bases:", valid_bases)
+
+if valid_bases:
+    selected_basis_index = int(input(f"Select a basis (0 to {len(valid_bases) - 1}): "))
+    # Выбираем базис и увеличиваем каждый индекс на 1
+    basis = list(valid_bases[selected_basis_index])
+    basis1 = [index + 1 for index in valid_bases[selected_basis_index]]
+    print("Selected basis (with +1):", basis1)
+else:
+    print("No valid bases found.")
+
+m, n = A.shape
+
+# Выводим начальные данные
+print("Vector of objective function coefficients (c):", c)
+print("Vector of variables:", variables)
+print("Coefficient matrix A:")
+print(A)
+print("Vector b:", b)
+print("Basic variables (indices):", basis1)
+print("Initial basic feasible solution:", x)
+
+# Основной цикл
+while count <= 7:
+    print(f"Iteration {count}")
+    count += 1
+    A_B = A[:, basis]  # Basis matrix
+    print("Matrix AB:")
+    print(A_B)
+
+    if count == 3:
+        A_B_inv = modify_matrix(memory, A_B) 
+        if isinstance(A_B_inv, str):  # Check if error string is returned
+            print(A_B_inv)  # Print the error message
+            break  # Exit the loop
+    else:
+        A_B_inv = np.linalg.inv(A_B)  # Calculate inverse of A_B
+    memory = A_B
+    # Ensure that A_B_inv is a numerical matrix (float64)
+    A_B_inv = np.array(A_B_inv, dtype=np.float64)  # Convert to float64 if needed
+
+    print("Inverse matrix AB:")
+    print(A_B_inv)
+
+    c_B = c[basis]  # Basic variable cost vector
+
+    # Ensure that c_B is a numerical vector (float64)
+    c_B = np.array(c_B, dtype=np.float64)  # Convert to float64 if needed
+
+    print("Vector cB:")
+    print(c_B)
+
+    U_ = np.dot(c_B, A_B_inv)  # Calculate U
+
+    print("Vector U:")
+    print(U_)
+
+    # Compute the reduced cost vector t
+    t = np.dot(U_, A) - c
+
+    print("Vector t:")
+    print(t)
+
+    # Find the first negative component in vector t
+    negative_components = [i for i, val in enumerate(t) if val < 0]
+
+    if negative_components:
+        j0 = negative_components[0]  # Index of the first negative component
+        print(f"First negative component index (j0): {j0}")
+    else:
+        print("No negative components in the reduced cost vector.")
+        print("Optimal solution reached:", x)
+        break
+
+    del1 = t[j0]
+    print(f"del1: {del1}")
+
+    A_j0 = A[:, j0]  # Get the column corresponding to the variable j0
+
+    z = np.dot(A_B_inv, A_j0)  # Calculate the vector z
+
+    print("Vector z:")
+    print(z)
+
+    # Now compute the vector θ (theta)
+    theta = np.full_like(z, np.inf)  # Initialize θ with ∞
+
+    for i in range(len(z)):
+        if z[i] > 0:
+            theta[i] = x[basis[i]] / z[i]  # Compute θ for positive z_i
+
+    print("Vector θ:")
+    print(theta)
+
+    valid_thetas = [theta_i for theta_i in theta if theta_i != np.inf]
+
+    if valid_thetas:
+        theta_0 = min(valid_thetas)
+        print(f"θ0 (minimum valid θ_i): {theta_0}")
+    else:
+        print("No valid θ_i found.")
+        break  # Exit the loop if no valid θ values found
+
+    # Check if θ0 is infinity, indicating unboundedness
+    if theta_0 == np.inf:
+        print("The objective function is unbounded on the feasible set.")
+    else:
+        print(f"θ0 (minimum valid θ_i): {theta_0}")
+
+    # Find the first index k where the minimum value in θ occurs
+    min_theta_value = np.inf
+    k = -1  # Initialize the index
+    for i, theta_i in enumerate(theta):
+        if theta_i < min_theta_value:  # Find the first minimum value
+            min_theta_value = theta_i
+            k = i
+
+    # Now, we need to find the corresponding index from the basis B
+    if k != -1:
+        j_star = basis[k]  # Corresponding basis index
+        print(f"The first index k where the minimum occurs: {k}")
+        print(f"Corresponding basis index j*: {j_star}")
+    else:
+        print("No valid θ_i found.")
+
+    # Updating the basis: Make sure no unwanted increment of index
+    basis[k] = j0  # Replace the k-th index with j0
+
+    # Print the updated basis B
+    print(f"Updated basis B: {basis}")
+
+    x[j0] = theta_0  # Set xj0 := θ0
+
+    # Step 2: Update for each basic variable i (except k)
+    for i in range(m):
+        if i != k:
+            j_i = basis[i]  # Get the i-th basis index from B
+            x[j_i] = x[j_i] - theta_0 * z[i]  # Update xji := xji - θ0 * zi
+
+    # Step 3: Set xj* := 0 (leaving variable)
+    x[j_star] = 0  # Set the leaving variable to 0
+
+    # Print the updated plan x
+    print("Updated plan x:", x)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import numpy as np
+import re
+from itertools import combinations
+
+def generate_valid_bases(A):
+    m, n = A.shape
+    valid_bases = []
+    
+    for cols in combinations(range(n), m): 
+        B = A[:, cols]  
+        if np.linalg.det(B) != 0:  
+            valid_bases.append(cols)
+
+    return valid_bases
+
+
+def extract_coefficients(equations):
+    num_equations = len(equations)
+    variables = set()
+    pattern = r"([+-]?\d*\.?\d+|[+-])?([a-zA-Z]\d*)"
+    
+    for equation in equations:
+        terms = re.findall(pattern, equation)
+        for coeff, var in terms:
+            if var:
+                variables.add(var)
+    
+    variables = sorted(list(variables))
+    num_variables = len(variables)
+    
+    A = np.zeros((num_equations, num_variables))
+    b = np.zeros(num_equations)
+    
+    for i, equation in enumerate(equations):
+        terms = re.findall(pattern, equation)
+        for coeff_str, var in terms:
+            if var:
+                coeff = -1.0 if coeff_str == "-" else (1.0 if coeff_str in ["", "+"] else float(coeff_str))
+                var_index = variables.index(var)
+                A[i, var_index] = coeff
+        
+        constant_term_match = re.search(r"=(.*)", equation)
+        if constant_term_match:
+            b[i] = float(constant_term_match.group(1))
+        else:
+            return None
+    
+    return A, b, variables
+
+def linear_programming_canonical(equations, objective_function):
+    A, b, variables = extract_coefficients(equations)
+    
+    obj_pattern = r"([+-]?\d*\.?\d*)*([a-zA-Z]\d*)"
+    obj_terms = re.findall(obj_pattern, objective_function)
+    
+    c = np.zeros(len(variables))
+    for coeff_str, var in obj_terms:
+        if var:
+            coeff = -1.0 if coeff_str == "-" else (1.0 if coeff_str in ["", "+"] else float(coeff_str))
+            var_index = variables.index(var)
+            c[var_index] = coeff
+    
+    basis = [i for i, col in enumerate(A.T) if sum(col) == 1 and set(col) <= {0, 1}]
+    x_b = b.copy()
+    x = np.zeros(len(variables))
+    for i, var in enumerate(basis):
+        if 0 <= var < len(x):  # Ensure index is within range
+           x[var] = x_b[i]
+    
+    return c, variables, A, b, x, basis
+
+objective_function = "x1 + x2"
+equations = [
+    "-x1 + x2 + x3 = 1",
+    "x1 + x4 = 3",
+    "x2 + x5 = 2"
+]
+
+c, variables, A, b, x, basis = linear_programming_canonical(equations, objective_function)
+
+valid_bases = generate_valid_bases(A)
+print("Valid bases:", valid_bases)
+
+if valid_bases:
+    selected_basis_index = int(input(f"Select a basis (0 to {len(valid_bases) - 1}): "))
+    basis = list(valid_bases[selected_basis_index])
+    print("Selected basis:", basis)
+else:
+    print("No valid bases found.")
+
+m, n = A.shape
+
+print("Vector of objective function coefficients (c):", c)
+print("Vector of variables:", variables)
+print("Coefficient matrix A:")
+print(A)
+print("Vector b:", b)
+print("Basic variables (indices):", basis)
+print("Initial basic feasible solution:", x)
+
+A_B = A[:, basis]
+
+print("Matrix AB:")
+print(A_B)
+
+A_B_inv = np.linalg.inv(A_B)
+
+print("Inverse matrix AB:")
+print(A_B_inv)
+
+c_B = c[basis]
+
+print("Vector cB:")
+print(c_B)
+
+U_ = np.dot(A_B_inv, c_B)
+
+print("Vector U:")
+print(U_)
+
+# Compute the reduced cost vector t
+t = np.dot(U_, A) - c
+
+print("Vector t:")
+print(t)
+
+# Find the first negative component in vector t
+negative_components = [i for i, val in enumerate(t) if val < 0]
+
+if negative_components:
+    j0 = negative_components[0]  # Index of the first negative component
+    print(f"First negative component index (j0): {j0}")
+else:
+    print("No negative components in the reduced cost vector.")
+
+del1 = t[j0]
+print(del1)
+
+A_j0 = A[:, j0]  # Get the column corresponding to the variable j0
+
+z = np.dot(A_B_inv, A_j0)
+
+print("Vector z:")
+print(z)
+
+# Now compute the vector θ (theta)
+theta = np.full_like(z, np.inf)  # Initialize θ with ∞
+
+for i in range(len(z)):
+    if z[i] > 0:
+        theta[i] = x[basis[i]] / z[i]  # Compute θ for positive z_i
+
+print("Vector θ:")
+print(theta)
+
+valid_thetas = [theta_i for theta_i in theta if theta_i != np.inf]
+
+if valid_thetas:
+    theta_0 = min(valid_thetas)
+    print(f"θ0 (minimum valid θ_i): {theta_0}")
+else:
+    print("No valid θ_i found.")
+
+# Check if θ0 is infinity, indicating unboundedness
+if theta_0 == np.inf:
+    print("The objective function is unbounded on the feasible set.")
+else:
+    print(f"θ0 (minimum valid θ_i): {theta_0}")
+
+# Find the first index k where the minimum value in θ occurs
+min_theta_value = np.inf
+k = -1  # Initialize the index
+for i, theta_i in enumerate(theta):
+    if theta_i < min_theta_value:  # Find the first minimum value
+        min_theta_value = theta_i
+        k = i
+
+# Now, we need to find the corresponding index from the basis B
+if k != -1:
+    j_star = basis[k]  # Corresponding basis index
+    print(f"The first index k where the minimum occurs: {k}")
+    print(f"Corresponding basis index j*: {j_star}")
+else:
+    print("No valid θ_i found.")
+
+basis[k] = j0  # Replace the k-th index with j0
+
+# Print the updated basis B
+print(f"Updated basis B: {basis}")
+
+x[j0] = theta_0  # Set xj0 := θ0
+
+# Step 2: Update for each basic variable i (except k)
+for i in range(m):
+    if i != k:
+        j_i = basis[i]  # Get the i-th basis index from B
+        x[j_i] = x[j_i] - theta_0 * z[i]  # Update xji := xji - θ0 * zi
+
+# Step 3: Set xj* := 0 (leaving variable)
+x[j_star] = 0  # Set the leaving variable to 0
+
+# Print the updated plan x
+print("Updated plan x:", x)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# import numpy as np
+# import itertools
+# import re
+
+
+# def extract_coefficients(equations):
+#     num_equations = len(equations)
+#     variables = set()  
+
+#     pattern = r"([+-]?\d*\.?\d*)*([a-zA-Z])"
+
+#     for equation in equations:
+#         terms = re.findall(pattern, equation)
+#         for coeff, var in terms:
+#             if var:
+#                 variables.add(var)
+
+#     variables = sorted(list(variables)) 
+#     num_variables = len(variables)
+
+#     A = np.zeros((num_equations, num_variables))
+#     b = np.zeros(num_equations)
+
+#     for i, equation in enumerate(equations):
+#       terms = re.findall(pattern, equation)
+#       for coeff_str, var in terms:
+#           if var:
+#               coeff = float(coeff_str) if coeff_str else 1.0 
+#               var_index = variables.index(var)
+#               A[i, var_index] = coeff
+
+#       constant_term_match = re.search(r"=(.*)", equation)
+#       if constant_term_match:
+#           b[i] = float(constant_term_match.group(1))
+#       else:
+#           return None 
+
+#     return A, b
+
+# def generate_b_sets(n, m):
+#   if n < m:
+#     return []
+#   return list(itertools.combinations(range(1, n + 1), m))
+
+# equations = [
+#     "-x1 + x2 + x3 = 1",
+#     "x1 + x4 = 3",
+#     "x2 + x5 = 2"
+# ]
+
+
+# A, b = extract_coefficients(equations)
+
+# if A is not None:
+#     print("Coefficient matrix A:")
+#     print(A)
+#     print("\nConstant vector b:")
+#     print(b)
+# else:
+#   print("Error parsing equations")
+
+# # print("\nwrite n:")
+# # n = int(input())
+# # if n <= 0:
+# #     print("\nERROR")
+# #     exit()
+
+# # print("\nwrite m:")
+# # m = int(input())
+# # if m <= 0:
+# #     print("\nERROR")
+# #     exit()
+
+# # print("\nWrite A:")
+# # A = [[0 for _ in range(n)] for _ in range(m)]
+# # for i in range(m):
+# #    for j in range(n):
+# #        print(f"\nWrite A[{i}][{j}]:")
+# #        while True: 
+# #            try:
+# #                A[i][j] = int(input())
+# #                break
+# #            except ValueError:
+# #                print("Invalid input. Please enter an integer.")
+
+# # for row in A:
+# #     print(row)
+
+
+# # b_sets = generate_b_sets(n, m)
+# # print(f"For n={n}, m={m}:")
+# # for b_set in b_sets:
+# #   print(b_set)
+
+
+# # print("\nWrite B:")
+# # B = [[0] * m for _ in range(1)] 
+# # for j in range(m):  
+# #        print(f"\nWrite B[0][{j}]:") 
+# #        while True: 
+# #            try:
+# #                B[0][j] = int(input())
+# #                break
+# #            except ValueError:
+# #                print("Invalid input. Please enter an integer.")
+
+# # for row in B:
+# #     print(row)
+
+# # print("\nWrite XT:")
+# # XT = [[0] * n for _ in range(1)] 
+# # for j in range(n):  
+# #        print(f"\nWrite XT[0][{j}]:") 
+# #        while True: 
+# #            try:
+# #                XT[0][j] = int(input())
+# #                break
+# #            except ValueError:
+# #                print("Invalid input. Please enter an integer.")
+
+# # for row in XT:
+# #     print(row)
+
+# # def simplex_method(c, A, b):
+# #     m, n = A.shape
+# #     B = list(range(n, n + m))  
+# #     N = list(range(n))
+# #     tableau = np.hstack([A, np.eye(m), b.reshape(-1, 1)])
+# #     c_B = np.zeros(m)
+# #     c_N = c.copy()
+    
+# #     while True:
+# #         A_B = tableau[:, B]
+# #         A_B_inv = np.linalg.inv(A_B)
+# #         u = c_B @ A_B_inv
+# #         delta = u @ tableau[:, N] - c_N
+        
+# #         if np.all(delta >= 0):
+# #             x = np.zeros(n + m)
+# #             x[B] = A_B_inv @ tableau[:, -1]
+# #             return x[:n], c @ x[:n]
+        
+# #         j0 = N[np.argmin(delta)]
+# #         z = A_B_inv @ tableau[:, j0]
+# #         theta = np.where(z > 0, (A_B_inv @ tableau[:, -1]) / z, np.inf)
+        
+# #         if np.all(theta == np.inf):
+# #             return None, "The objective function is not bounded from above"
+        
+# #         k = np.argmin(theta)
+# #         B[k] = j0
+# #         c_B[k] = c[j0]
+# #         N.remove(j0)
+# #         N.append(B[k])
+
+# # c = np.array([3, 2])
+# # A = np.array([[1, 2], [1, -1]])
+# # b = np.array([4, 1])
+# # solution, optimal_value = simplex_method(c, A, b)
+# # print("Optimal plan:", solution)
+# # print("Optimal value of the objective function:", optimal_value)
