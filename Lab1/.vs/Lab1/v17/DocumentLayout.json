@@ -1,9 +1,9 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "V:\\BSUIR\\3k2s\\MOiU\\Lab1\\",
+  "WorkspaceRootPath": "D:\\Rep\\Prog\\MOiU\\Lab1\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{DE3601D1-45A8-4EEC-AF43-1DC703A050AB}|Lab1\\Lab1.pyproj|V:\\BSUIR\\3k2s\\MOiU\\Lab1\\Lab1\\Lab1.py||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "AbsoluteMoniker": "D:0:0:{DE3601D1-45A8-4EEC-AF43-1DC703A050AB}|Lab1\\Lab1.pyproj|D:\\Rep\\Prog\\MOiU\\Lab1\\Lab1\\Lab1.py||{8B382828-6202-11D1-8870-0000F87579D2}",
       "RelativeMoniker": "D:0:0:{DE3601D1-45A8-4EEC-AF43-1DC703A050AB}|Lab1\\Lab1.pyproj|solutionrelative:Lab1\\Lab1.py||{8B382828-6202-11D1-8870-0000F87579D2}"
     }
   ],
@@ -28,11 +28,11 @@
               "$type": "Document",
               "DocumentIndex": 0,
               "Title": "Lab1.py",
-              "DocumentMoniker": "V:\\BSUIR\\3k2s\\MOiU\\Lab1\\Lab1\\Lab1.py",
+              "DocumentMoniker": "D:\\Rep\\Prog\\MOiU\\Lab1\\Lab1\\Lab1.py",
               "RelativeDocumentMoniker": "Lab1\\Lab1.py",
-              "ToolTip": "V:\\BSUIR\\3k2s\\MOiU\\Lab1\\Lab1\\Lab1.py*",
-              "RelativeToolTip": "Lab1\\Lab1.py*",
-              "ViewState": "AgIAAA0AAAAAAAAAAAAqwDEAAAAmAAAAAAAAAA==",
+              "ToolTip": "D:\\Rep\\Prog\\MOiU\\Lab1\\Lab1\\Lab1.py",
+              "RelativeToolTip": "Lab1\\Lab1.py",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAB0AAAAgAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.002457|",
               "WhenOpened": "2025-01-22T09:29:16.24Z",
               "EditorCaption": ""

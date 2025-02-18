@@ -98,17 +98,13 @@ def modify_matrix(A, A_modified):
         l1 = l.copy()
         l1[i-1:] = y
         
-
         l2 = -1 / l[i-1] * l1
         
-
         Q = np.eye(n)
         
-
         Q_modified = Q.copy()
         Q_modified[:, i-1] = l2.flatten()
         
-
         A_modified1 = np.dot(Q_modified, A1)
         print("\nA_modified1:")
         print(A_modified1)
@@ -228,7 +224,7 @@ while count <= 7:
         print(f"θ0 (minimum valid θ_i): {theta_0}")
 
     min_theta_value = np.inf
-    k = -1  # Initialize the index
+    k = -1
     for i, theta_i in enumerate(theta):
         if theta_i < min_theta_value:  
             min_theta_value = theta_i
